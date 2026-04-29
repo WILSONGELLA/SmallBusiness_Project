@@ -162,7 +162,19 @@ class _InventoryScreenState extends State<InventoryScreen> {
                     Expanded(
                       child: TextFormField(
                         controller: stockCtrl,
-                        decoration: _inputDeco('Stock Qty *'),
+                        decoration: _inputDeco('Stock Qty *').copyWith(
+                            prefix: IconButton(
+                              icon: Icon(Icons.remove),
+                              onPressed: () {
+                                stockCtrl.text = ((int.tryParse(stockCtrl.text) ?? 0) - 1).toString();
+                              },
+                            ),suffix: IconButton(
+                              icon: Icon(Icons.add),
+                              onPressed: () {
+                                stockCtrl.text = ((int.tryParse(stockCtrl.text) ?? 0) + 1).toString();
+                              },
+                            )
+                          ),
                         keyboardType: TextInputType.number,
                         validator: (v) {
                           if (v == null || v.trim().isEmpty) {
@@ -184,19 +196,90 @@ class _InventoryScreenState extends State<InventoryScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Expanded(
-                      child: TextFormField(
-                        controller: catCtrl,
-                        decoration: _inputDeco('Category *'),
-                        validator: (v) => (v == null || v.trim().isEmpty)
-                            ? 'Category is required'
-                            : null,
+                      child: DropdownMenu<String>(
+                        dropdownMenuEntries: categories
+                            .map((cat) => DropdownMenuEntry<String>(
+                                  value: cat,
+                                  label: cat,
+                                ))
+                            .toList(),
+                        initialSelection:
+                            catCtrl.text.isEmpty ? null : catCtrl.text,
+                        onSelected: (String? value) {
+                          if (value != null) {
+                            catCtrl.text = value;
+                          }
+                        },
+                        inputDecorationTheme: InputDecorationTheme(
+                          constraints:
+                              const BoxConstraints(minHeight: 48),
+                          isDense: true,
+                          contentPadding:
+                              const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 12),
+                          filled: true,
+                          fillColor: const Color(0xFFF7F7F7),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: BorderSide.none,
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: const BorderSide(
+                                color: Color(0xFFE8572A), width: 1.5),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: BorderSide.none,
+                          ),
+                          labelStyle:
+                              const TextStyle(fontSize: 12),
+                        ),
+                        label: const Text('Category *'),
                       ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
-                      child: TextFormField(
-                        controller: unitCtrl,
-                        decoration: _inputDeco('Unit (pack, bottle...)'),
+                      child: DropdownMenu<String>(
+                        dropdownMenuEntries: ['Pack', 'Sachet', 'Bottle', 'Can', 'Piece']
+                            .map((unit) => DropdownMenuEntry<String>(
+                                  value: unit,
+                                  label: unit,
+                                ))
+                            .toList(),
+                        initialSelection:
+                            unitCtrl.text.isEmpty ? null : unitCtrl.text,
+                        onSelected: (String? value) {
+                          if (value != null) {
+                            unitCtrl.text = value;
+                          }
+                        },
+                        inputDecorationTheme: InputDecorationTheme(
+                          constraints:
+                              const BoxConstraints(minHeight: 48),
+                          isDense: true,
+                          contentPadding:
+                              const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 12),
+                          filled: true,
+                          fillColor: const Color(0xFFF7F7F7),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: BorderSide.none,
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: const BorderSide(
+                                color: Color(0xFFE8572A), width: 1.5),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: BorderSide.none,
+                          ),
+                          labelStyle:
+                              const TextStyle(fontSize: 12),
+                        ),
+                        label: const Text('Unit'),
                       ),
                     ),
                   ],
