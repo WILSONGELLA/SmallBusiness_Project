@@ -137,7 +137,7 @@ class Transaction {
 }
 
 // ─── GLOBAL APP STORE ─────────────────────────────────────────────────────────
-class AppStore {
+class AppStore extends ChangeNotifier {
   AppStore._();
   static final AppStore instance = AppStore._();
 
@@ -238,6 +238,12 @@ class AppStore {
       t.customer!.purchaseCount += 1;
       t.customer!.totalSpent += t.grandTotal;
     }
+    notifyListeners();
+  }
+
+  // Public method to notify listeners of changes
+  void refreshData() {
+    notifyListeners();
   }
 
   double get totalSalesToday {

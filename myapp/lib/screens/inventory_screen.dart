@@ -303,7 +303,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                       if (!formKey.currentState!.validate()) return;
                       setState(() {
                         if (product == null) {
-                          _products.add(Product(
+                          final newProduct = Product(
                             id: DateTime.now().millisecondsSinceEpoch.toString(),
                             name: nameCtrl.text.trim(),
                             category: catCtrl.text.trim(),
@@ -315,7 +315,11 @@ class _InventoryScreenState extends State<InventoryScreen> {
                             emoji: emojiCtrl.text.trim().isEmpty
                                 ? '📦'
                                 : emojiCtrl.text.trim(),
-                          ));
+                          );
+                          _products.add(newProduct);
+                          // Also add to global AppStore
+                          AppStore.instance.products.add(newProduct);
+                          AppStore.instance.refreshData();
                         } else {
                           product.name = nameCtrl.text.trim();
                           product.category = catCtrl.text.trim();
@@ -327,6 +331,8 @@ class _InventoryScreenState extends State<InventoryScreen> {
                           product.emoji = emojiCtrl.text.trim().isEmpty
                               ? '📦'
                               : emojiCtrl.text.trim();
+                          // Notify global AppStore of changes
+                          AppStore.instance.refreshData();
                         }
                       });
                       Navigator.pop(ctx);
@@ -374,6 +380,9 @@ class _InventoryScreenState extends State<InventoryScreen> {
             label: const Text('Delete'),
             onPressed: () {
               setState(() => _products.removeWhere((p) => p.id == product.id));
+              // Also remove from global AppStore
+              AppStore.instance.products.removeWhere((p) => p.id == product.id);
+              AppStore.instance.refreshData();
               Navigator.pop(ctx);
               _showSuccessSnack('🗑️ "${product.name}" has been deleted.',
                   color: const Color(0xFFE53935));

@@ -78,6 +78,19 @@ class _NewSaleTabState extends State<NewSaleTab> {
   String _paymentMethod = 'Cash';
   final _amountPaidCtrl = TextEditingController();
 
+  @override
+  void initState() {
+    super.initState();
+    // Listen to store changes and rebuild when products/inventory updates
+    store.addListener(() => setState(() {}));
+  }
+
+  @override
+  void dispose() {
+    _amountPaidCtrl.dispose();
+    super.dispose();
+  }
+
   double get _cartSubtotal => _cart.fold(0, (s, i) => s + i.subtotal);
   double get _customerDiscount => _selectedCustomer?.discountRate ?? 0;
   double get _discountAmount => _cartSubtotal * (_customerDiscount / 100);
@@ -243,15 +256,8 @@ class _NewSaleTabState extends State<NewSaleTab> {
                           ],
                         ),
                       )
-                    : GridView.builder(
+                      : ListView.builder(
                         padding: const EdgeInsets.all(10),
-                        gridDelegate:
-                            const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          childAspectRatio: 1.4,
-                          crossAxisSpacing: 8,
-                          mainAxisSpacing: 8,
-                        ),
                         itemCount: _availableProducts.length,
                         itemBuilder: (_, i) {
                           final p = _availableProducts[i];
@@ -261,75 +267,180 @@ class _NewSaleTabState extends State<NewSaleTab> {
                           return GestureDetector(
                             onTap: () => _addToCart(p),
                             child: Container(
+                              margin: const EdgeInsets.only(bottom: 8),
                               decoration: BoxDecoration(
                                 color: Colors.white,
                                 borderRadius: BorderRadius.circular(12),
                                 border: inCart > 0
                                     ? Border.all(
                                         color: const Color(0xFFE8572A),
-                                        width: 2)
+                                        width: 2,
+                                      )
                                     : null,
                                 boxShadow: const [
                                   BoxShadow(
-                                      color: Color(0x0D000000),
-                                      blurRadius: 6,
-                                      offset: Offset(0, 2))
+                                    color: Color(0x0D000000),
+                                    blurRadius: 6,
+                                    offset: Offset(0, 2),
+                                  ),
                                 ],
                               ),
                               child: Stack(
                                 children: [
                                   Padding(
-                                    padding: const EdgeInsets.all(10),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 10,
+                                    ),
+                                    child: Row(
                                       children: [
-                                        Text(p.emoji,
-                                            style:
-                                                const TextStyle(fontSize: 24)),
-                                        const SizedBox(height: 4),
-                                        Text(p.name,
-                                            style: const TextStyle(
-                                                fontSize: 11,
-                                                fontWeight: FontWeight.bold),
-                                            maxLines: 2,
-                                            overflow: TextOverflow.ellipsis),
-                                        Text('₱${p.price.toStringAsFixed(2)}',
-                                            style: const TextStyle(
-                                                color: Color(0xFFE8572A),
-                                                fontWeight: FontWeight.bold,
-                                                fontSize: 13)),
-                                      ],
-                                    ),
-                                  ),
-                                  if (inCart > 0)
-                                    Positioned(
-                                      top: 6,
-                                      right: 6,
-                                      child: Container(
-                                        width: 22,
-                                        height: 22,
-                                        decoration: const BoxDecoration(
-                                          color: Color(0xFFE8572A),
-                                          shape: BoxShape.circle,
+                                        Text(
+                                          p.emoji,
+                                          style: const TextStyle(fontSize: 28),
                                         ),
-                                        child: Center(
-                                          child: Text('$inCart',
-                                              style: const TextStyle(
-                                                  color: Colors.white,
-                                                  fontSize: 11,
-                                                  fontWeight: FontWeight.bold)),
-                                        ),
-                                      ),
-                                    ),
-                                ],
-                              ),
-                            ),
-                          );
-                        },
-                      ),
+                                        const SizedBox(width: 12),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                p.name,
+                                                style: const TextStyle(
+                                                  fontSize: 13,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                                maxLines: 2,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                              const SizedBox(height: 2),
+                                              Text(
+                                                '₱${p.price.toStringAsFixed(2)}',
+                                                style: const TextStyle(
+                                                  color: Color(0xFFE8572A),
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 13,
+                                                ),
+                                              ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (inCart > 0)
+              Positioned(
+                top: 6,
+                right: 6,
+                child: Container(
+                  width: 22,
+                  height: 22,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFE8572A),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Center(
+                    child: Text('$inCart',
+                        style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold)),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  },
+),
+                    // : GridView.builder(
+                    //     padding: const EdgeInsets.all(10),
+                    //     gridDelegate:
+                    //         const SliverGridDelegateWithFixedCrossAxisCount(
+                    //       crossAxisCount: 2,
+                    //       childAspectRatio: 1.4,
+                    //       crossAxisSpacing: 8,
+                    //       mainAxisSpacing: 8,
+                    //     ),
+                    //     itemCount: _availableProducts.length,
+                    //     itemBuilder: (_, i) {
+                    //       final p = _availableProducts[i];
+                    //       final inCart = _cart
+                    //           .where((c) => c.product.id == p.id)
+                    //           .fold(0, (s, c) => s + c.quantity);
+                    //       return GestureDetector(
+                    //         onTap: () => _addToCart(p),
+                    //         child: Container(
+                    //           decoration: BoxDecoration(
+                    //             color: Colors.white,
+                    //             borderRadius: BorderRadius.circular(12),
+                    //             border: inCart > 0
+                    //                 ? Border.all(
+                    //                     color: const Color(0xFFE8572A),
+                    //                     width: 2)
+                    //                 : null,
+                    //             boxShadow: const [
+                    //               BoxShadow(
+                    //                   color: Color(0x0D000000),
+                    //                   blurRadius: 6,
+                    //                   offset: Offset(0, 2))
+                    //             ],
+                    //           ),
+                    //           child: Stack(
+                    //             children: [
+                    //               Padding(
+                    //                 padding: const EdgeInsets.all(10),
+                    //                 child: Column(
+                    //                   crossAxisAlignment:
+                    //                       CrossAxisAlignment.start,
+                    //                   mainAxisAlignment:
+                    //                       MainAxisAlignment.center,
+                    //                   children: [
+                    //                     Text(p.emoji,
+                    //                         style:
+                    //                             const TextStyle(fontSize: 24)),
+                    //                     const SizedBox(height: 4),
+                    //                     Text(p.name,
+                    //                         style: const TextStyle(
+                    //                             fontSize: 11,
+                    //                             fontWeight: FontWeight.bold),
+                    //                         maxLines: 2,
+                    //                         overflow: TextOverflow.ellipsis),
+                    //                     Text('₱${p.price.toStringAsFixed(2)}',
+                    //                         style: const TextStyle(
+                    //                             color: Color(0xFFE8572A),
+                    //                             fontWeight: FontWeight.bold,
+                    //                             fontSize: 13)),
+                    //                   ],
+                    //                 ),
+                    //               ),
+                    //               if (inCart > 0)
+                    //                 Positioned(
+                    //                   top: 6,
+                    //                   right: 6,
+                    //                   child: Container(
+                    //                     width: 22,
+                    //                     height: 22,
+                    //                     decoration: const BoxDecoration(
+                    //                       color: Color(0xFFE8572A),
+                    //                       shape: BoxShape.circle,
+                    //                     ),
+                    //                     child: Center(
+                    //                       child: Text('$inCart',
+                    //                           style: const TextStyle(
+                    //                               color: Colors.white,
+                    //                               fontSize: 11,
+                    //                               fontWeight: FontWeight.bold)),
+                    //                     ),
+                    //                   ),
+                    //                 ),
+                    //             ],
+                    //           ),
+                    //         ),
+                    //       );
+                    //     },
+                    //   ),
               ),
 
               // ── Cart / order summary ──────────────────────────────────────
