@@ -28,11 +28,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
     }
   }
 
-  List<String> get categories {
-    final cats = _products.map((p) => p.category).toSet().toList();
-    cats.sort();
-    return ['All', ...cats];
-  }
+  List<String> get categories => ['All', ...AppStore.instance.categories];
 
   List<Product> get filtered {
     return _products.where((p) {
@@ -196,46 +192,136 @@ class _InventoryScreenState extends State<InventoryScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Expanded(
-                      child: DropdownMenu<String>(
-                        dropdownMenuEntries: categories
-                            .map((cat) => DropdownMenuEntry<String>(
+                      child: StatefulBuilder(
+                        builder: (context, setLocal) {
+                          final storeCategories = AppStore.instance.categories;
+                          const _newCategoryKey = '__new__';
+                          return DropdownMenu<String>(
+                            dropdownMenuEntries: [
+                              ...storeCategories.map(
+                                (cat) => DropdownMenuEntry<String>(
                                   value: cat,
                                   label: cat,
-                                ))
-                            .toList(),
-                        initialSelection:
-                            catCtrl.text.isEmpty ? null : catCtrl.text,
-                        onSelected: (String? value) {
-                          if (value != null) {
-                            catCtrl.text = value;
-                          }
-                        },
-                        inputDecorationTheme: InputDecorationTheme(
-                          constraints:
-                              const BoxConstraints(minHeight: 48),
-                          isDense: true,
-                          contentPadding:
-                              const EdgeInsets.symmetric(
+                                ),
+                              ),
+                              const DropdownMenuEntry<String>(
+                                value: _newCategoryKey,
+                                label: '+ New Category',
+                                style: ButtonStyle(
+                                  foregroundColor: WidgetStatePropertyAll(
+                                      Color(0xFFE8572A)),
+                                ),
+                              ),
+                            ],
+                            initialSelection:
+                                catCtrl.text.isEmpty ? null : catCtrl.text,
+                            onSelected: (String? value) async {
+                              if (value == null) return;
+                              if (value == _newCategoryKey) {
+                                // Show add-category dialog
+                                final newCat = await showDialog<String>(
+                                  context: context,
+                                  builder: (dCtx) {
+                                    final ctrl = TextEditingController();
+                                    return AlertDialog(
+                                      shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(20)),
+                                      title: const Text('New Category',
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 16)),
+                                      content: TextField(
+                                        controller: ctrl,
+                                        autofocus: true,
+                                        textCapitalization:
+                                            TextCapitalization.words,
+                                        decoration: InputDecoration(
+                                          hintText: 'e.g. Personal Care',
+                                          filled: true,
+                                          fillColor:
+                                              const Color(0xFFF7F7F7),
+                                          border: OutlineInputBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(10),
+                                            borderSide: BorderSide.none,
+                                          ),
+                                          focusedBorder: OutlineInputBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(10),
+                                            borderSide: const BorderSide(
+                                                color: Color(0xFFE8572A),
+                                                width: 1.5),
+                                          ),
+                                        ),
+                                      ),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () =>
+                                              Navigator.pop(dCtx),
+                                          child: const Text('Cancel',
+                                              style: TextStyle(
+                                                  color: Colors.grey)),
+                                        ),
+                                        ElevatedButton(
+                                          onPressed: () => Navigator.pop(
+                                              dCtx, ctrl.text.trim()),
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor:
+                                                const Color(0xFFE8572A),
+                                            foregroundColor: Colors.white,
+                                            shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(
+                                                        10)),
+                                          ),
+                                          child: const Text('Add'),
+                                        ),
+                                      ],
+                                    );
+                                  },
+                                );
+                                if (newCat != null && newCat.isNotEmpty) {
+                                  final added =
+                                      AppStore.instance.addCategory(newCat);
+                                  if (added) {
+                                    catCtrl.text = newCat;
+                                    setLocal(() {});
+                                  } else {
+                                    // Already exists — just select it
+                                    catCtrl.text = newCat;
+                                  }
+                                }
+                              } else {
+                                catCtrl.text = value;
+                              }
+                            },
+                            inputDecorationTheme: InputDecorationTheme(
+                              constraints:
+                                  const BoxConstraints(minHeight: 48),
+                              isDense: true,
+                              contentPadding: const EdgeInsets.symmetric(
                                   horizontal: 12, vertical: 12),
-                          filled: true,
-                          fillColor: const Color(0xFFF7F7F7),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                            borderSide: BorderSide.none,
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                            borderSide: const BorderSide(
-                                color: Color(0xFFE8572A), width: 1.5),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                            borderSide: BorderSide.none,
-                          ),
-                          labelStyle:
-                              const TextStyle(fontSize: 12),
-                        ),
-                        label: const Text('Category *'),
+                              filled: true,
+                              fillColor: const Color(0xFFF7F7F7),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                                borderSide: BorderSide.none,
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                                borderSide: const BorderSide(
+                                    color: Color(0xFFE8572A), width: 1.5),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                                borderSide: BorderSide.none,
+                              ),
+                              labelStyle: const TextStyle(fontSize: 12),
+                            ),
+                            label: const Text('Category *'),
+                          );
+                        },
                       ),
                     ),
                     const SizedBox(width: 12),

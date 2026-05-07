@@ -84,6 +84,31 @@ class _RegisterScreenState extends State<RegisterScreen>
     }
   }
 
+  static const _bannedPasswords = {
+    // Generic common passwords
+    'password', 'password1', 'password123',
+    '123456', '1234567', '12345678', '123456789',
+    '1234', '12345', '111111', '000000', '11111111',
+    'qwerty', 'qwerty123', 'qwertyuiop',
+    'abc123', 'abcdef', 'letmein', 'iloveyou',
+    'admin', 'admin123', 'welcome', 'welcome1',
+    'monkey', 'dragon', 'sunshine', 'princess',
+    'shadow', 'master', 'superman', 'batman',
+    'trustno1', 'passw0rd', 'p@ssword', 'p@ssw0rd',
+    // App-specific ones
+    'tindahan', 'saristore', 'sarisari', 'tindahanko',
+  };
+
+  String? _validatePassword(String? v) {
+    if (!_touched.contains('password')) return null;
+    if (v == null || v.isEmpty) return 'Password is required';
+    if (v.length < 8) return 'Password must be at least 8 characters';
+    if (_bannedPasswords.contains(v.toLowerCase())) {
+      return 'This password is too common. Please choose a stronger one.';
+    }
+    return null;
+  }
+
   void _submit() async {
     setState(() => _touched
         .addAll(['name', 'business', 'phone', 'email', 'password', 'confirm']));
@@ -371,12 +396,7 @@ class _RegisterScreenState extends State<RegisterScreen>
                                       () => _obscurePassword = !_obscurePassword),
                                 ),
                               ),
-                              validator: (v) {
-                                if (!_touched.contains('password')) return null;
-                                if (v == null || v.isEmpty) return 'Password is required';
-                                if (v.length < 8) return 'Password must be at least 8 characters';
-                                return null;
-                              },
+                              validator: _validatePassword,
                             ),
                             if (_passwordCtrl.text.isNotEmpty) ...[
                               const SizedBox(height: 10),

@@ -1,10 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/app_state.dart';
 
-// ═══════════════════════════════════════════════════════════════════════════════
-//  TRANSACTIONS SCREEN  (tabs: New Sale | History)
-// ═══════════════════════════════════════════════════════════════════════════════
-
 class TransactionsScreen extends StatefulWidget {
   const TransactionsScreen({super.key});
 
@@ -207,8 +203,7 @@ class _NewSaleTabState extends State<NewSaleTab> {
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
-      builder: (_) => _CustomerPickerSheet(
-          customers: store.customers, selected: _selectedCustomer),
+      builder: (_) => _CustomerPickerSheet(selected: _selectedCustomer),
     );
     setState(() => _selectedCustomer = result);
   }
@@ -1167,10 +1162,8 @@ class ReceiptSheet extends StatelessWidget {
 // ─── CUSTOMER PICKER SHEET ────────────────────────────────────────────────────
 
 class _CustomerPickerSheet extends StatefulWidget {
-  final List<Customer> customers;
   final Customer? selected;
-  const _CustomerPickerSheet(
-      {required this.customers, required this.selected});
+  const _CustomerPickerSheet({required this.selected});
 
   @override
   State<_CustomerPickerSheet> createState() => _CustomerPickerSheetState();
@@ -1181,7 +1174,7 @@ class _CustomerPickerSheetState extends State<_CustomerPickerSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final filtered = widget.customers
+    final filtered = AppStore.instance.customers
         .where((c) =>
             _q.isEmpty ||
             c.name.toLowerCase().contains(_q.toLowerCase()) ||

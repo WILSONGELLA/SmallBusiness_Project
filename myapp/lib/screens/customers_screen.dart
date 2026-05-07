@@ -9,7 +9,7 @@ class CustomersScreen extends StatefulWidget {
 }
 
 class _CustomersScreenState extends State<CustomersScreen> {
-  final List<Customer> _customers = List.from(AppData.sampleCustomers);
+  List<Customer> get _customers => AppStore.instance.customers;
   String _search = '';
   String _filter = 'All';
 
@@ -261,7 +261,7 @@ class _CustomersScreenState extends State<CustomersScreen> {
                         if (!formKey.currentState!.validate()) return;
                         setState(() {
                           if (customer == null) {
-                            _customers.add(Customer(
+                            AppStore.instance.customers.add(Customer(
                               id: DateTime.now()
                                   .millisecondsSinceEpoch
                                   .toString(),
@@ -339,7 +339,7 @@ class _CustomersScreenState extends State<CustomersScreen> {
             label: const Text('Delete'),
             onPressed: () {
               setState(() =>
-                  _customers.removeWhere((c) => c.id == customer.id));
+                  AppStore.instance.customers.removeWhere((c) => c.id == customer.id));
               Navigator.pop(ctx);
               _showSuccessSnack('🗑️ "${customer.name}" has been deleted.',
                   color: const Color(0xFFE53935));
