@@ -31,6 +31,8 @@ class Product {
   int stock;
   String unit;
   String emoji;
+  /// For beverages: how many individual units are in one case (0 = not applicable)
+  int caseSize;
 
   Product({
     required this.id,
@@ -40,10 +42,12 @@ class Product {
     required this.stock,
     required this.unit,
     required this.emoji,
+    this.caseSize = 0,
   });
 
   bool get isLowStock => stock <= 5;
   bool get isOutOfStock => stock == 0;
+  bool get hasCaseSize => caseSize > 1;
 }
 
 // ─── CUSTOMER ─────────────────────────────────────────────────────────────────
@@ -136,22 +140,62 @@ class Transaction {
       'TXN-${date.year}${date.month.toString().padLeft(2, '0')}${date.day.toString().padLeft(2, '0')}-${id.substring(id.length - 4).toUpperCase()}';
 }
 
-// ─── PER-USER DATA ────────────────────────────────────────────────────────────
+// ─── RECEIVABLE (Accounts Receivable / Utang) ─────────────────────────────────
+class Receivable {
+  final String id;
+  final String customerName;
+  final String customerPhone;
+  double amount;
+  final DateTime dateCreated;
+  DateTime? dueDate;
+  bool isPaid;
+  String? notes;
+  final List<String> itemsSummary; // e.g. ['2x Lucky Me', '1x Bear Brand']
+
+  Receivable({
+    required this.id,
+    required this.customerName,
+    required this.customerPhone,
+    required this.amount,
+    required this.dateCreated,
+    this.dueDate,
+    this.isPaid = false,
+    this.notes,
+    this.itemsSummary = const [],
+  });
+
+  bool get isOverdue =>
+      !isPaid && dueDate != null && DateTime.now().isAfter(dueDate!);
+
+  bool get isDueSoon {
+    if (isPaid || dueDate == null) return false;
+    final diff = dueDate!.difference(DateTime.now()).inDays;
+    return diff >= 0 && diff <= 3;
+  }
+}
+
+
 class UserData {
   final List<Product> products;
   final List<Customer> customers;
   final List<Transaction> transactions;
   final List<String> categories;
+  final List<Receivable> receivables;
+  final List<String> customUnits;
 
   UserData({
     List<Product>? products,
     List<Customer>? customers,
     List<Transaction>? transactions,
     List<String>? categories,
+    List<Receivable>? receivables,
+    List<String>? customUnits,
   })  : products = products ?? [],
         customers = customers ?? [],
         transactions = transactions ?? [],
-        categories = categories ?? [];
+        categories = categories ?? [],
+        receivables = receivables ?? [],
+        customUnits = customUnits ?? [];
 }
 
 // ─── GLOBAL APP STORE ─────────────────────────────────────────────────────────
@@ -222,6 +266,7 @@ class AppStore extends ChangeNotifier {
   List<Product> get products => _currentData.products;
   List<Customer> get customers => _currentData.customers;
   List<Transaction> get transactions => _currentData.transactions;
+  List<Receivable> get receivables => _currentData.receivables;
 
   /// Sorted list of categories for the current user.
   List<String> get categories {
@@ -229,6 +274,32 @@ class AppStore extends ChangeNotifier {
     cats.sort();
     return cats;
   }
+
+  // ── Receivables management ────────────────────────────────────────────────
+  void addReceivable(Receivable r) {
+    _currentData.receivables.insert(0, r);
+    notifyListeners();
+  }
+
+  void markReceivablePaid(String id) {
+    final idx = _currentData.receivables.indexWhere((r) => r.id == id);
+    if (idx != -1) {
+      _currentData.receivables[idx].isPaid = true;
+      notifyListeners();
+    }
+  }
+
+  void deleteReceivable(String id) {
+    _currentData.receivables.removeWhere((r) => r.id == id);
+    notifyListeners();
+  }
+
+  double get totalReceivables => _currentData.receivables
+      .where((r) => !r.isPaid)
+      .fold(0.0, (s, r) => s + r.amount);
+
+  int get overdueReceivables =>
+      _currentData.receivables.where((r) => r.isOverdue).length;
 
   // ── Category management ───────────────────────────────────────────────────
 
@@ -248,6 +319,22 @@ class AppStore extends ChangeNotifier {
   void removeCategory(String name) {
     _currentData.categories.removeWhere((c) => c == name);
     notifyListeners();
+  }
+
+  // ── Custom unit management ────────────────────────────────────────────────
+
+  List<String> get customUnits => _currentData.customUnits;
+
+  /// Adds a custom unit. Returns the name if added, or the existing name if duplicate.
+  String addCustomUnit(String name) {
+    final trimmed = name.trim().toLowerCase();
+    if (trimmed.isEmpty) return '';
+    final existing = _currentData.customUnits
+        .firstWhere((u) => u.toLowerCase() == trimmed, orElse: () => '');
+    if (existing.isNotEmpty) return existing;
+    _currentData.customUnits.add(trimmed);
+    notifyListeners();
+    return trimmed;
   }
 
   // ── Auth ──────────────────────────────────────────────────────────────────

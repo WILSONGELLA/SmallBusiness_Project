@@ -3,6 +3,7 @@ import '../models/app_state.dart';
 import 'inventory_screen.dart';
 import 'customers_screen.dart';
 import 'transactions_screen.dart';
+import 'loan_system.dart';
 import 'login_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -427,20 +428,24 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final labels = ['Dashboard', 'Inventory', 'Customers', 'Transactions'];
+    final store = AppStore.instance;
+    final labels = ['Dashboard', 'Inventory', 'Customers', 'Transactions', 'Utang'];
     final tabIcons = [
       Icons.dashboard_outlined,
       Icons.inventory_2_outlined,
       Icons.people_outline,
       Icons.receipt_long_outlined,
+      Icons.account_balance_wallet_outlined,
     ];
     final activeTabIcons = [
       Icons.dashboard,
       Icons.inventory_2,
       Icons.people,
       Icons.receipt_long,
+      Icons.account_balance_wallet,
     ];
     final isInventory = _selectedIndex == 1;
+    final overdueCount = store.overdueReceivables;
 
     return Scaffold(
       key: _scaffoldKey,
@@ -542,6 +547,7 @@ class _HomeScreenState extends State<HomeScreen> {
           InventoryScreen(initialCategory: _inventoryCategory),
           const CustomersScreen(),
           TransactionsScreen(key: const ValueKey('txn')),
+          const ReceivablesScreen(),
         ],
       ),
       bottomNavigationBar: Container(
@@ -561,15 +567,34 @@ class _HomeScreenState extends State<HomeScreen> {
           unselectedItemColor: const Color(0xFFAAAAAA),
           backgroundColor: Colors.white,
           selectedLabelStyle:
-              const TextStyle(fontWeight: FontWeight.bold, fontSize: 11),
+              const TextStyle(fontWeight: FontWeight.bold, fontSize: 10),
+          unselectedLabelStyle: const TextStyle(fontSize: 10),
           type: BottomNavigationBarType.fixed,
           items: List.generate(
-            4,
-            (i) => BottomNavigationBarItem(
-              icon: Icon(tabIcons[i]),
-              activeIcon: Icon(activeTabIcons[i]),
-              label: labels[i],
-            ),
+            5,
+            (i) {
+              // Show overdue badge on Utang tab
+              if (i == 4 && overdueCount > 0) {
+                return BottomNavigationBarItem(
+                  icon: Badge(
+                    label: Text('$overdueCount'),
+                    backgroundColor: const Color(0xFFE53935),
+                    child: Icon(tabIcons[i]),
+                  ),
+                  activeIcon: Badge(
+                    label: Text('$overdueCount'),
+                    backgroundColor: const Color(0xFFE53935),
+                    child: Icon(activeTabIcons[i]),
+                  ),
+                  label: labels[i],
+                );
+              }
+              return BottomNavigationBarItem(
+                icon: Icon(tabIcons[i]),
+                activeIcon: Icon(activeTabIcons[i]),
+                label: labels[i],
+              );
+            },
           ),
         ),
       ),
@@ -724,10 +749,19 @@ class DashboardTab extends StatelessWidget {
                 subtitle: lowStock
                     .map((p) => '${p.emoji} ${p.name} (${p.stock} left)')
                     .join(', ')),
-            const SizedBox(height: 20),
+            const SizedBox(height: 10),
           ],
+          if (store.overdueReceivables > 0) ...[
+            _alertCard(
+                icon: Icons.account_balance_wallet_outlined,
+                color: const Color(0xFFAD1457),
+                bg: const Color(0xFFFCE4EC),
+                title: '${store.overdueReceivables} utang/receivable${store.overdueReceivables > 1 ? 's are' : ' is'} overdue!',
+                subtitle: 'Total outstanding: ₱${store.totalReceivables.toStringAsFixed(2)} — tap Utang tab to view'),
+            const SizedBox(height: 10),
+          ],
+          const SizedBox(height: 10),
 
-          // Stat cards
           Row(
             children: [
               Expanded(
