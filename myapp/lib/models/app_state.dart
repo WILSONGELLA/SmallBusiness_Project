@@ -214,7 +214,7 @@ class AppStore extends ChangeNotifier {
 
   /// Returns the data store for the currently logged-in user.
   UserData get _currentData {
-    assert(currentUser != null, 'No user is logged in');
+    if (currentUser == null) return UserData();
     return _userDataMap.putIfAbsent(currentUser!.id, () => UserData());
   }
 

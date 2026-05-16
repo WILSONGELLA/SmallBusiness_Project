@@ -327,7 +327,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: DropdownMenu<String>(
-                        dropdownMenuEntries: ['Pack', 'Sachet', 'Bottle', 'Can', 'Piece']
+                        dropdownMenuEntries: ['Pack', 'Sachet', 'Bottle', 'Can', 'Piece', 'Case']
                             .map((unit) => DropdownMenuEntry<String>(
                                   value: unit,
                                   label: unit,

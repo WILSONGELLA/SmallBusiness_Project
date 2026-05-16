@@ -112,6 +112,84 @@ class _RegisterScreenState extends State<RegisterScreen>
   void _submit() async {
     setState(() => _touched
         .addAll(['name', 'business', 'phone', 'email', 'password', 'confirm']));
+
+    // Collect missing/invalid fields for the alert dialog
+    final missing = <String>[];
+    if (_nameCtrl.text.trim().isEmpty) missing.add('Full Name');
+    if (_phoneCtrl.text.trim().isEmpty) missing.add('Phone Number');
+    if (_emailCtrl.text.trim().isEmpty) missing.add('Email Address');
+    if (_businessCtrl.text.trim().isEmpty) missing.add('Business / Store Name');
+    if (_passwordCtrl.text.isEmpty) missing.add('Password');
+    if (_confirmCtrl.text.isEmpty) missing.add('Confirm Password');
+
+    if (missing.isNotEmpty) {
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          contentPadding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 60,
+                height: 60,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFEBEB),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: const Center(
+                    child: Text('⚠️', style: TextStyle(fontSize: 28))),
+              ),
+              const SizedBox(height: 16),
+              const Text('Missing Information',
+                  style: TextStyle(
+                      fontSize: 17, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              const Text('Please fill in the following fields:',
+                  style:
+                      TextStyle(fontSize: 12, color: Color(0xFF888888))),
+              const SizedBox(height: 12),
+              ...missing.map((field) => Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 3),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.radio_button_unchecked,
+                            size: 14, color: Color(0xFFE8572A)),
+                        const SizedBox(width: 8),
+                        Text(field,
+                            style: const TextStyle(
+                                fontSize: 13,
+                                color: Color(0xFF444444),
+                                fontWeight: FontWeight.w500)),
+                      ],
+                    ),
+                  )),
+            ],
+          ),
+          actions: [
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () => Navigator.pop(ctx),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFE8572A),
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
+                  elevation: 0,
+                ),
+                child: const Text('Got it',
+                    style: TextStyle(fontWeight: FontWeight.bold)),
+              ),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
     if (!_formKey.currentState!.validate()) return;
     if (!_agreedToTerms) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -126,15 +204,6 @@ class _RegisterScreenState extends State<RegisterScreen>
     setState(() => _isLoading = true);
     await Future.delayed(const Duration(milliseconds: 1500));
     if (!mounted) return;
-
-    // ── Save to AppStore ──────────────────────────────────────────────────
-    final account = AppStore.instance.register(
-      fullName: _nameCtrl.text.trim(),
-      businessName: _businessCtrl.text.trim(),
-      phone: _phoneCtrl.text.trim(),
-      email: _emailCtrl.text.trim(),
-      password: _passwordCtrl.text,
-    );
 
     setState(() => _isLoading = false);
 
@@ -162,8 +231,7 @@ class _RegisterScreenState extends State<RegisterScreen>
             const SizedBox(height: 8),
             Text(
               'Welcome, ${_nameCtrl.text.trim().split(' ').first}!\n'
-              '"${_businessCtrl.text.trim()}" is ready.\n\n'
-              'Your username is: ${account.username}',
+              '"${_businessCtrl.text.trim()}" is ready.\n\n',
               textAlign: TextAlign.center,
               style: const TextStyle(color: Color(0xFF666666), fontSize: 13),
             ),
@@ -382,7 +450,7 @@ class _RegisterScreenState extends State<RegisterScreen>
                               onChanged: (_) => setState(() => _touched.add('password')),
                               decoration: _inputDeco(
                                 label: 'Create Password',
-                                hint: 'Minimum 8 characters',
+                                hint: 'Minimum of 8 characters',
                                 icon: Icons.lock_outline_rounded,
                                 suffix: IconButton(
                                   icon: Icon(

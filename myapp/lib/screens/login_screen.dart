@@ -220,13 +220,6 @@ class _LoginScreenState extends State<LoginScreen>
                         ),
                       ),
                       const SizedBox(height: 16),
-                      Center(
-                        child: Text(
-                          'Demo: username "aling" / password "1234"',
-                          style: TextStyle(color: Colors.grey[400], fontSize: 11),
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
                       const SizedBox(height: 20),
                       const Divider(color: Color(0xFFEEEEEE)),
                       const SizedBox(height: 16),
